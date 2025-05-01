@@ -1,3 +1,4 @@
-reminders.json
-.env
 __pycache__/
+.env
+reminders.json
+channels.json
