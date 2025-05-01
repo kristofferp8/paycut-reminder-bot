@@ -10,6 +10,7 @@ import os
 import os
 TOKEN = os.getenv("DISCORD_TOKEN")
 CHANNEL_CONFIG_FILE = 'channels.json'
+DATA_FILE = 'reminders.json'
 server_channels = {}
 
 data_lock = asyncio.Lock()
