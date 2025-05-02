@@ -7,7 +7,6 @@ import json
 import asyncio
 import os
 
-import os
 TOKEN = os.getenv("DISCORD_TOKEN")
 CHANNEL_CONFIG_FILE = 'channels.json'
 DATA_FILE = 'reminders.json'
@@ -140,31 +139,34 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    if message.author == bot.user or message.author.bot:
+        return
+
     if message.guild and os.path.exists(CHANNEL_CONFIG_FILE):
         with open(CHANNEL_CONFIG_FILE, 'r') as f:
             config = json.load(f)
         server_cfg = config.get(str(message.guild.id))
-        if server_cfg and message.channel.id == server_cfg['channel_id'] and message.author != bot.user:
+        if server_cfg and message.channel.id == server_cfg['channel_id']:
             await message.channel.purge()
 
-        info_embed = discord.Embed(
-            title="ℹ️ Reminder Bot Setup Info",
-            description="✅ To receive reminders, make sure:\n"
-                        "- Your **DMs are open** (enable 'Allow direct messages from server members' in Privacy Settings)\n"
-                        "- You’ve configured your **timezone and item duration** via the setup channel\n"
-                        "- You haven’t left the server\n\n"
-                        "🔕 If DMs are off or you block the bot, you won't receive reminder messages.",
-            color=0x3498db
-        )
+            info_embed = discord.Embed(
+                title="ℹ️ Reminder Bot Setup Info",
+                description="✅ To receive reminders, make sure:\n"
+                            "- Your **DMs are open** (enable 'Allow direct messages from server members' in Privacy Settings)\n"
+                            "- You’ve configured your **timezone and item duration** via the setup channel\n"
+                            "- You haven’t left the server\n\n"
+                            "🔕 If DMs are off or you block the bot, you won't receive reminder messages.",
+                color=0x3498db
+            )
 
-        embed = discord.Embed(
-            title="⏰ Weekly Reminder Setup",
-            description="This bot helps you track your 7-day item renewal. Click below to configure your timezone and current item duration.",
-            color=0x00ff99
-        )
+            embed = discord.Embed(
+                title="⏰ Weekly Reminder Setup",
+                description="This bot helps you track your 7-day item renewal. Click below to configure your timezone and current item duration.",
+                color=0x00ff99
+            )
 
-        await message.channel.send(embed=info_embed)
-        await message.channel.send(embed=embed, view=ConfigButtonView())
+            await message.channel.send(embed=info_embed)
+            await message.channel.send(embed=embed, view=ConfigButtonView())
 
     await bot.process_commands(message)
 
