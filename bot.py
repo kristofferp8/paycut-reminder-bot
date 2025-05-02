@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands, tasks
 from discord.ui import Button, View, Select, Modal, TextInput
 from datetime import datetime, timedelta
+from keep_alive import keep_alive
 import pytz
 import json
 import asyncio
@@ -254,4 +255,5 @@ class DurationInputModal(Modal):
         except ValueError:
             await interaction.response.send_message("❗ Invalid input. Please enter numbers for days and hours.", ephemeral=True)
 
+keep_alive()
 bot.run(TOKEN)
