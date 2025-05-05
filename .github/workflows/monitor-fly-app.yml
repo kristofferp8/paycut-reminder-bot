@@ -1,0 +1,22 @@
+name: Monitor Fly.io App
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Fly.io app and notify Discord on failure
+        run: |
+          URL="https://paycut-reminder-bot.fly.dev"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+          echo "Status: $STATUS"
+          if [ "$STATUS" -ne 200 ]; then
+            curl -X POST -H "Content-Type: application/json" \
+              -d "{\"content\": \"🚨 Fly.io bot is down or unhealthy (status $STATUS)!\"}" \
+              ${{ secrets.DISCORD_MONITOR_WEBHOOK }}
+            exit 1
+          fi
