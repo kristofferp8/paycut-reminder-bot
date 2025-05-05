@@ -2,21 +2,30 @@ name: Monitor Fly.io App
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: '*/10 * * * *'  # every 10 minutes
   workflow_dispatch:
 
 jobs:
-  ping:
+  monitor:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Ping Fly.io app and notify Discord on failure
-        run: |
-          URL="https://paycut-reminder-bot.fly.dev"
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
-          echo "Status: $STATUS"
-          if [ "$STATUS" -ne 200 ]; then
-            curl -X POST -H "Content-Type: application/json" \
-              -d "{\"content\": \"🚨 Fly.io bot is down or unhealthy (status $STATUS)!\"}" \
-              ${{ secrets.DISCORD_MONITOR_WEBHOOK }}
-            exit 1
-          fi
+    - name: Install Fly.io CLI
+      run: |
+        curl -L https://fly.io/install.sh | sh
+        echo "$HOME/.fly/bin" >> $GITHUB_PATH
+
+    - name: Authenticate with Fly.io
+      run: fly auth token
+      env:
+        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+    - name: Check machine status
+      run: |
+        STATUS=$(fly machines list --app paycut-reminder-bot --json | jq -r '.[0].state')
+        echo "Status: $STATUS"
+        if [ "$STATUS" != "started" ]; then
+          curl -X POST -H "Content-Type: application/json" \
+            -d '{"content":"🚨 Fly.io app is not running!"}' ${{ secrets.DISCORD_MONITOR_WEBHOOK }}
+          exit 1
+        fi
